@@ -15,3 +15,7 @@ func TestMysqlConnection(t *testing.T) {
 
 	fmt.Println("已经建立的链接数", sqldb.Stats().OpenConnections)
 }
+
+func TestCreate(t *testing.T) {
+	chapter01.CreateSingle()
+}
