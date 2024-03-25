@@ -174,3 +174,457 @@ func TestCreate(t *testing.T) {
 
 ![image-20240321165520471](E:\go\go-orm-learn\gorm教程.assets\image-20240321165520471.png)
 
+### 4、查询数据
+
+##### 查询单个对象
+
+GORM 提供了 `First`、`Take`、`Last` 方法，以便从数据库中检索单个对象。当查询数据库时它添加了 `LIMIT 1` 条件，且没有找到记录时，它会返回 `ErrRecordNotFound` 错误
+
+###### first查询
+
+按照主键升序或者第一个实体的第一个字段升序获取第一条记录
+
+```go
+	// 获取第一条记录（主键升序）
+	var user User
+
+	// 获取第一条记录（主键升序）
+	// 相当于SELECT * FROM `users` ORDER BY `users`.`id` LIMIT 1
+	result := db.First(&user)
+	fmt.Println(user)
+```
+
+###### Take方法查询
+
+获取第一条记录，没有进行排序
+
+```go
+	user = User{}
+	// 获取一条记录，没有指定排序字段
+	db.Take(&user)
+	// SELECT * FROM users LIMIT 1;
+	fmt.Println(user)
+```
+
+###### Last方法查询
+
+按照主键升序或者第一个实体的第一个字段降序获取第一条记录
+
+```go
+	user = User{}
+	// 获取最后一条记录（主键降序）
+	// SELECT * FROM users ORDER BY id DESC LIMIT 1;
+	db.Last(&user)
+	user = User{}
+```
+
+##### 根据主键查询
+
+```go
+	var users []User
+	var user2 User
+	// 根据主键查询索引
+
+	// SELECT * FROM users WHERE id = 1;
+	db.First(&user2, 1)
+
+	fmt.Println(result1)
+    
+    // 把user2恢复到默认状态
+     user2 = User{}
+	// SELECT * FROM users WHERE id = 1;
+	db.First(&user2, "1")
+
+	// SELECT * FROM users WHERE id IN (1,2,3);
+	db.Find(&users, []int{1, 2, 3})
+```
+
+运行后的输出结果为：
+
+```txt
+2024/03/25 13:52:50 E:/go/go-orm-learn/chapter01/grom_crud.go:99
+[10.932ms] [rows:1] SELECT * FROM `users` WHERE `users`.`id` = 1 ORDER BY `users`.`id` LIMIT 1
+&{0xc000188510 <nil> 1 0xc000084c40 0}
+
+2024/03/25 13:52:50 E:/go/go-orm-learn/chapter01/grom_crud.go:105
+[1.030ms] [rows:1] SELECT * FROM `users` WHERE `users`.`id` = '1' ORDER BY `users`.`id` LIMIT 1
+
+2024/03/25 13:52:50 E:/go/go-orm-learn/chapter01/grom_crud.go:108
+[0.517ms] [rows:3] SELECT * FROM `users` WHERE `users`.`id` IN (1,2,3)
+--- PASS: TestSelectById (0.02s)
+```
+
+在目标结构有一个主键值时，可以使用主键构建查询条件，如下面的所示：
+
+```go
+	var user = User{ID: 1}
+	// SELECT * FROM `users` WHERE `users`.`id` = 1 ORDER BY `users`.`id` LIMIT 1
+	db.First(&user)
+```
+
+##### 查询全部对象
+
+```go
+func SelectAll() {
+	var users []User
+	// 这里需要替换成自己的mysql地址及账号等
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	// SELECT * FROM `users`
+	db.Find(&users)
+	fmt.Println(users)
+}
+```
+
+##### 基于条件查询
+
+###### string条件查询
+
+​	等于查询
+
+```go
+// string条件查询
+func SelectByConditionString() {
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	var user User
+	// SELECT * FROM `users` WHERE name = 'jinzhu' AND age = 18
+	db = db.Where("name = ?", "jinzhu")
+	db.Where("age = ?", 18).Find(&user)
+    
+	fmt.Println(user)
+}
+```
+
+不等于查询
+
+```go
+	var users []User
+	// SELECT * FROM `users` WHERE name <> 'jinzhu'
+	// 不等于查询
+	db.Where("name <> ?", "jinzhu").Find(&users)
+	fmt.Println(users)
+```
+
+in查询
+
+```go
+// SELECT * FROM `users` WHERE name IN ('jinzhu','jinzhu2')
+	// in查询
+	db.Where("name IN ?", []string{"jinzhu", "jinzhu2"}).Find(&users)
+	fmt.Println(users)
+```
+
+like模糊查询
+
+```go
+// SELECT * FROM `users` WHERE name like '%jinzhu%'
+	// like模糊查询
+	db.Where("name like ?", "%jinzhu%").Find(&users)
+	fmt.Println(users)
+```
+
+and查询
+
+```go
+	// SELECT * FROM `users` WHERE name = 'jinzhu' and age >= 10
+	// and查询
+	db.Where("name = ? and age >= ?", "jinzhu", 10).Find(&users)
+	fmt.Println(users)
+```
+
+
+
+###### Struct条件和map条件查询
+
+struct查询
+
+```go
+	var user User
+	var users []User
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	// Struct
+	// SELECT * FROM `users` WHERE `users`.`name` = 'jinzhu' AND `users`.`age` = 18 ORDER BY `users`.`id` LIMIT 1;
+	db.Where(&User{Name: "jinzhu", Age: 18}).First(&user)
+```
+
+map查询
+
+```go
+	// Map
+	// SELECT * FROM `users` WHERE `age` = 18 AND `name` = 'jinzhu'
+	db.Where(map[string]interface{}{"name": "jinzhu", "age": 18}).Find(&users)
+```
+
+通过主键id进行查询
+
+```go
+	// Slice of primary keys
+	// SELECT * FROM `users` WHERE `users`.`id` IN (1,2,3)
+	db.Where([]int64{1, 2, 3}).Find(&users)
+```
+
+在通过结构体进行查询的时候，如果是零值数据，那么不会构建查询条件。
+
+如下所示：
+
+```go
+db.Where(&User{Name: "jinzhu", Age: 0}).Find(&users)
+```
+
+由于age字段的值为0，所以不会基于age字段来构建查询条件，最终的查询语句则为`SELECT * FROM users WHERE name = "jinzhu";`
+
+当需要零值进行查询的时候，那么需要使用map结构来进行查询
+
+```go
+	// SELECT * FROM `users` WHERE `Age` = 0 AND `Name` = 'jinzhu'
+	db.Where(map[string]interface{}{"Name": "jinzhu", "Age": 0}).Find(&users)
+```
+
+指定查询字段来规避零值问题
+
+```go
+// SELECT * FROM users WHERE name = "jinzhu" AND age = 0;
+db.Where(&User{Name: "jinzhu"}, "name", "Age").Find(&users)
+
+// SELECT * FROM users WHERE age = 0;
+db.Where(&User{Name: "jinzhu"}, "Age").Find(&users)
+```
+
+###### 内联条件
+
+除了使用where条件外，我们可以在使用可以使用内联条件方式在Find、First、Last等方法中使用，下面是具体示例：
+
+```go
+	var user User
+	var users []User
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	// Get by primary key if it were a non-integer type
+	// SELECT * FROM users WHERE id = 1;
+	db.First(&user, "id = ?", 1)
+
+	// Plain SQL
+	db.Find(&user, "name = ?", "jinzhu")
+	// SELECT * FROM users WHERE name = "jinzhu";
+
+	db.Find(&users, "name <> ? AND age > ?", "jinzhu", 20)
+	// SELECT * FROM users WHERE name <> "jinzhu" AND age > 20;
+
+	// Struct
+	db.Find(&users, User{Age: 20})
+	// SELECT * FROM users WHERE age = 20;
+
+	// Map
+	db.Find(&users, map[string]interface{}{"age": 20})
+	// SELECT * FROM users WHERE age = 20;
+```
+
+###### Not 条件
+
+not条件跟where有点相似
+
+```go
+	var user User
+	var users []User
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	db.Not("name = ?", "jinzhu").First(&user)
+	// SELECT * FROM users WHERE NOT name = "jinzhu" ORDER BY id LIMIT 1;
+
+	// Not In
+	db.Not(map[string]interface{}{"name": []string{"jinzhu", "jinzhu 2"}}).Find(&users)
+	// SELECT * FROM users WHERE name NOT IN ("jinzhu", "jinzhu 2");
+
+	// Struct
+	db.Not(User{Name: "jinzhu", Age: 18}).First(&user)
+	// SELECT * FROM users WHERE name <> "jinzhu" AND age <> 18 ORDER BY id LIMIT 1;
+
+	// Not In slice of primary keys
+	db.Not([]int64{1, 2, 3}).First(&user)
+	// SELECT * FROM users WHERE id NOT IN (1,2,3) ORDER BY id LIMIT 1;
+```
+
+###### Or 条件
+
+```go
+	var users []User
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	
+	// SELECT * FROM `users` WHERE name = 'jinzhu' OR (name = 'jinzhu 2' and age = 18)
+	db.Where("name = ?", "jinzhu").Or("name = ? and age = ?", "jinzhu 2", 18).Find(&users)
+
+	// Struct
+	// SELECT * FROM `users` WHERE name = 'jinzhu' OR (`users`.`name` = 'jinzhu 2' AND `users`.`age` = 18)
+	db.Where("name = 'jinzhu'").Or(User{Name: "jinzhu 2", Age: 18}).Find(&users)
+
+	// Map
+	// SELECT * FROM `users` WHERE name = 'jinzhu' OR (`age` = 18 AND `name` = 'jinzhu 2')
+	db.Where("name = 'jinzhu'").Or(map[string]interface{}{"name": "jinzhu 2", "age": 18}).Find(&users)
+```
+
+###### 查询指定字段
+
+通过Select方法来指定需要查询的字段，如果没有指定，则默认查询所有的字段。
+
+```go
+	var users []User
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+
+	// SELECT `name`,`age` FROM `users`
+	db.Select("name", "age").Find(&users)
+```
+
+###### 排序
+
+通过order方法指定排序的字段及排序方式
+
+```go
+	var users []User
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	db.Order("age desc, name").Find(&users)
+	// SELECT * FROM users ORDER BY age desc, name;
+
+	// Multiple orders
+	// SELECT * FROM users ORDER BY age desc, name;
+	db.Order("age desc").Order("name").Find(&users)
+```
+
+###### Limit & Offset
+
+```go
+	var users []User
+	var users1 []User
+	var users2 []User
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	db.Limit(3).Find(&users)
+	// SELECT * FROM users LIMIT 3;
+
+	// Cancel limit condition with -1
+	db.Limit(10).Find(&users1).Limit(-1).Find(&users2)
+	// SELECT * FROM users LIMIT 10; (users1)
+	// SELECT * FROM users; (users2)
+
+	// SELECT * FROM `users` LIMIT 10 OFFSET 5
+	// limit表示获取多少条数据  OFFSET表示跳过多少条数据
+	db.Offset(1).Limit(10).Find(&users)
+```
+
+###### Group By & Having
+
+```go
+	var result result
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+
+	db.Model(&User{}).Select("name, sum(age) as total").Where("name LIKE ?", "group%").Group("name").Order("name desc").Find(&result)
+
+	db.Model(&User{}).Select("name, sum(age) as total").Group("name").Having("name = ?", "group").Find(&result)
+```
+
+###### Distinct
+
+```go
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	var result map[string]interface{}
+	db.Model(&User{}).Distinct("name", "age").Find(&result)
+	fmt.Println(result)
+```
+
+### 4、修改数据
+
+#### 保存所有字段
+
+可以使用save字段来更新所有字段，及时字段是零值
+
+```
+	var user User
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	db.First(&user)
+
+	user.Name = "jinzhu 2"
+	user.Age = 100
+	// UPDATE `users` SET `name`='jinzhu 2',`email`=NULL,
+	//`age`=100,`birthday`='2024-03-21 16:52:50.665',`member_number`=NULL,
+	//`activated_at`=NULL,`created_at`='2024-03-21 16:52:50.69',
+	//`updated_at`='2024-03-25 16:25:08.448' WHERE `id` = 1
+	db.Save(&user)
+```
+
+从上面输出的sql语句可以看到，User结构体中的所有字段都被更新了，及时字段为空也会被更新。
+
+save方法是一个组合方法，如果保存的值不存在主键，就会进行新建！
+
+如果存在主键，那么就会进行更新。
+
+```go
+	// INSERT INTO `users` (`name`,`email`,`age`,`birthday`,`member_number`,`activated_at`,`created_at`,`updated_at`) 
+	// VALUES ('jinzhu8',NULL,22,NULL,NULL,NULL,'2024-03-25 16:38:58.857','2024-03-25 16:38:58.857')
+	db.Save(&User{
+		Name:      "jinzhu8",
+		Age:       22,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	})
+	// UPDATE `users` SET `name`='jinzhu',`email`=NULL,`age`=100,`birthday`=NULL,`member_number`=NULL,
+	//`activated_at`=NULL,`created_at`='2024-03-25 16:38:58.859',`updated_at`='2024-03-25 16:38:58.86' WHERE `id` = 1
+	db.Save(&User{ID: 1, Name: "jinzhu", Age: 100, CreatedAt: time.Now()})
+```
+
+上面的第一次的Save方法调用，由于主键Id没有赋值，所以执行了保存操作。第二次调用，由于指定ID为1，那么执行的是一个更新操作。
+
+#### 更新单个列
+
+当使用 `Update` 更新单列时，需要有一些条件，否则将会引起`ErrMissingWhereClause` 错误，查看 [阻止全局更新](https://gorm.io/zh_CN/docs/update.html#block_global_updates) 了解详情。 当使用 `Model` 方法，并且它有主键值时，主键将会被用于构建条件，例如：
+
+```go
+	var user User
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	// 根据条件更新
+	// UPDATE `users` SET `name`='hello',`updated_at`='2024-03-25 16:57:52.216' WHERE age = 18;
+	db.Model(&User{}).Where("age = ?", 18).Update("name", "hello")
+
+	// User 的 ID 是 1
+	// UPDATE `users` SET `name`='hello',`updated_at`='2024-03-25 16:57:52.227' WHERE `id` = 1
+	db.Model(&User{ID: 1}).Update("name", "hello")
+
+
+	// 根据条件和 model 的值进行更新
+	// UPDATE `users` SET `name`='hello',`updated_at`='2024-03-25 16:57:52.23' WHERE age = 100
+	db.Model(&user).Where("age = ?", 100).Update("name", "hello")
+```
+
+#### 更新多列
+
+gorm的Updates方法支持更新struct和map[string]interface{}参数，当参数是在结构体的时候，默认情况下只会更新非零值的字段
+
+```go
+	var user = User{
+		ID: 1,
+	}
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	// 根据 `struct` 更新属性，只会更新非零值的字段
+	// UPDATE `users` SET `name`='hello',`updated_at`='2024-03-25 17:14:10.48' WHERE `id` = 1
+	db.Model(&user).Updates(User{Name: "hello", Age: 0})
+
+	// 根据 `map` 更新属性
+	// UPDATE `users` SET `age`=0,`name`='hello',`updated_at`='2024-03-25 17:14:10.494' WHERE `id` = 1
+	db.Model(&user).Updates(map[string]interface{}{"name": "hello", "age": 0})
+```
+
+#### 更新选定字段
+
+```
+// UPDATE `users` SET `name`='hello2',`updated_at`='2024-03-25 17:33:01.714' WHERE `id` = 1
+	db.Model(&User{ID: 1}).Select("name").Updates(map[string]interface{}{"name": "hello2", "age": 18, "active": false})
+```
+
+可以通过Select方法来选定特定字段来进行更新
+
+#### 批量更新
+
+```go
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	
+  // UPDATE `users` SET `name`='hello',`age`=18,`updated_at`='2024-03-25 17:41:13.394' WHERE name = 'hello2'
+	db.Model(User{}).Where("name = ?", "hello2").Updates(User{
+		Name: "hello",
+		Age:  18,
+	})
+```
+
