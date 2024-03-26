@@ -628,3 +628,86 @@ gorm的Updates方法支持更新struct和map[string]interface{}参数，当参�
 	})
 ```
 
+#### 5、删除数据
+
+##### 删除一条记录
+
+删除一条记录的时候，需要指定对应的主键，不然会发生批量删除。
+
+```sql
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	// 删除Id = 1的数据
+	db.Delete(&User{
+		ID: 1,
+	})
+```
+
+测试代码如下：
+
+```go
+import (
+	"go-orm-learn/chapter01"
+	"testing"
+)
+
+func TestDeleteSingle(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{name: "test"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			chapter01.DeleteSingle()
+		})
+	}
+}
+```
+
+观测数据库的结果：
+
+![image-20240326094835718](E:\go\go-orm-learn\gorm教程.assets\image-20240326094835718.png)
+
+说明数据已经被删除了！
+
+
+
+##### 通过主键删除记录
+
+GORM 允许通过主键(可以是复合主键)和内联条件来删除对象
+
+```go
+// 通过主键删除数据
+func DeleteById() {
+	var users []User
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	// DELETE FROM users WHERE id = 10;
+	db.Delete(&User{}, 10)
+	
+	// DELETE FROM users WHERE id = 10;
+	db.Delete(&User{}, "10")
+	
+	
+	// DELETE FROM `users` WHERE `users`.`id` IN (1,2,3)
+	db.Delete(&users, []int{1, 2, 3})
+}
+```
+
+测试代码如下：
+
+```go
+func TestDeleteById(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{name: "DeleteById"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			chapter01.DeleteById()
+		})
+	}
+}
+```
+
+运行测试代码后，可以发现数据库中对应的数据已经被成功删除
