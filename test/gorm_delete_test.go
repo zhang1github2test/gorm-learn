@@ -30,3 +30,16 @@ func TestDeleteById(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteByBatch(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{name: "DeleteByBatch"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			chapter01.DeleteBatch()
+		})
+	}
+}

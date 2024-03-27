@@ -711,3 +711,36 @@ func TestDeleteById(t *testing.T) {
 ```
 
 运行测试代码后，可以发现数据库中对应的数据已经被成功删除
+
+##### 带条件删除
+
+如果指定的值不包括主属性，那么 GORM 会执行批量删除，它将删除所有匹配的记录。
+
+```go
+// 按照条件删除对应的
+func DeleteBatch() {
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+
+	// DELETE FROM `users` WHERE name = 'jinzhu'
+	db.Delete(&User{}, "name = ?", "jinzhu")
+}
+```
+
+测试代码如下：
+
+```sql
+func TestDeleteByBatch(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{name: "DeleteByBatch"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			chapter01.DeleteBatch()
+		})
+	}
+}
+```
+
+运行测试代码后，发现所有的姓名为jinzhu记录都已经被删除成功删除了

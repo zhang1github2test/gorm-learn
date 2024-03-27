@@ -23,3 +23,11 @@ func DeleteById() {
 	// DELETE FROM `users` WHERE `users`.`id` IN (1,2,3)
 	db.Delete(&users, []int{1, 2, 3})
 }
+
+// 按照条件删除对应的
+func DeleteBatch() {
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+
+	// DELETE FROM `users` WHERE name = 'jinzhu'
+	db.Delete(&User{}, "name = ?", "jinzhu")
+}
