@@ -1,13 +1,12 @@
-package test
+package chapter01
 
 import (
 	"fmt"
-	"go-orm-learn/chapter01"
 	"testing"
 )
 
 func TestMysqlConnection(t *testing.T) {
-	db, err := chapter01.GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	db, err := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
 	if err != nil {
 		t.Errorf("err is not nil")
 	}
@@ -17,92 +16,92 @@ func TestMysqlConnection(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
-	chapter01.CreateSingle()
+	CreateSingle()
 }
 
 func TestCreateMany(t *testing.T) {
-	chapter01.CrateMany()
+	CrateMany()
 }
 
 func TestSelect(t *testing.T) {
-	chapter01.Select()
+	Select()
 }
 
 // 测试基于主键ID来进行数据查询
 func TestSelectById(t *testing.T) {
-	chapter01.SelectById()
+	SelectById()
 }
 
 // 测试查询所有数据
 func TestSelectAll(t *testing.T) {
-	chapter01.SelectAll()
+	SelectAll()
 }
 
 // 测试string 条件查询
 func TestSelectByConditionString(t *testing.T) {
-	chapter01.SelectByConditionString()
+	SelectByConditionString()
 }
 
 // 查询结构体进行查询
 func TestSelectByStruct(t *testing.T) {
-	chapter01.SelectByStruct()
+	SelectByStruct()
 }
 
 // 内联查询
 func TestSelect4(t *testing.T) {
-	chapter01.Select4()
+	Select4()
 }
 
 // Not查询
 func TestSelectNot(t *testing.T) {
-	chapter01.SelectNot()
+	SelectNot()
 }
 
 // or查询
 func TestSelectOr(t *testing.T) {
-	chapter01.SelectOr()
+	SelectOr()
 }
 
 // 查询指定字段
 func TestSelectFields(t *testing.T) {
-	chapter01.SelectFields()
+	SelectFields()
 }
 
 // 指定查询的排序字段及方式
 func TestSelectOrder(t *testing.T) {
-	chapter01.SelectOrder()
+	SelectOrder()
 }
 
 // 指定查询的排序字段及方式
 func TestSelectLimit(t *testing.T) {
-	chapter01.SelectLimit()
+	SelectLimit()
 }
 
 // group及having用法
 func TestSelectGroup(t *testing.T) {
-	chapter01.SelectGroup()
+	SelectGroup()
 }
 
 // Distinct
 func TestSelectDistinct(t *testing.T) {
-	chapter01.SelectDistinct()
+	SelectDistinct()
 }
 
 // save
 func TestSave(t *testing.T) {
-	chapter01.Save()
+	Save()
 }
 
 // 测试更新单个列
 func TestUpdateSingleCol(t *testing.T) {
-	chapter01.UpdateSingleCol()
+	UpdateSingleCol()
 }
 
 // 测试更新多个列
 func TestUpdateMany(t *testing.T) {
-	chapter01.UpdateMany()
+	UpdateMany()
 }
 
 func TestUpdateBatch(t *testing.T) {
-	chapter01.UpdateBatch()
+	UpdateBatch()
 }

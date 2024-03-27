@@ -187,24 +187,23 @@ func SelectByStruct() {
 func Select4() {
 	var user User
 	var users []User
-	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
 	// Get by primary key if it were a non-integer type
 	// SELECT * FROM users WHERE id = 1;
-	db.First(&user, "id = ?", 1)
+	Db.First(&user, "id = ?", 1)
 
 	// Plain SQL
-	db.Find(&user, "name = ?", "jinzhu")
+	Db.Find(&user, "name = ?", "jinzhu")
 	// SELECT * FROM users WHERE name = "jinzhu";
 
-	db.Find(&users, "name <> ? AND age > ?", "jinzhu", 20)
+	Db.Find(&users, "name <> ? AND age > ?", "jinzhu", 20)
 	// SELECT * FROM users WHERE name <> "jinzhu" AND age > 20;
 
 	// Struct
-	db.Find(&users, User{Age: 20})
+	Db.Find(&users, User{Age: 20})
 	// SELECT * FROM users WHERE age = 20;
 
 	// Map
-	db.Find(&users, map[string]interface{}{"age": 20})
+	Db.Find(&users, map[string]interface{}{"age": 20})
 	// SELECT * FROM users WHERE age = 20;
 }
 
@@ -212,59 +211,54 @@ func Select4() {
 func SelectNot() {
 	var user User
 	var users []User
-	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
-	db.Not("name = ?", "jinzhu").First(&user)
+	Db.Not("name = ?", "jinzhu").First(&user)
 	// SELECT * FROM users WHERE NOT name = "jinzhu" ORDER BY id LIMIT 1;
 
 	// Not In
-	db.Not(map[string]interface{}{"name": []string{"jinzhu", "jinzhu 2"}}).Find(&users)
+	Db.Not(map[string]interface{}{"name": []string{"jinzhu", "jinzhu 2"}}).Find(&users)
 	// SELECT * FROM users WHERE name NOT IN ("jinzhu", "jinzhu 2");
 
 	// Struct
-	db.Not(User{Name: "jinzhu", Age: 18}).First(&user)
+	Db.Not(User{Name: "jinzhu", Age: 18}).First(&user)
 	// SELECT * FROM users WHERE name <> "jinzhu" AND age <> 18 ORDER BY id LIMIT 1;
 
 	// Not In slice of primary keys
-	db.Not([]int64{1, 2, 3}).First(&user)
+	Db.Not([]int64{1, 2, 3}).First(&user)
 	// SELECT * FROM users WHERE id NOT IN (1,2,3) ORDER BY id LIMIT 1;
 }
 
 // Or条件
 func SelectOr() {
 	var users []User
-	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
 
 	// SELECT * FROM `users` WHERE name = 'jinzhu' OR (name = 'jinzhu 2' and age = 18)
-	db.Where("name = ?", "jinzhu").Or("name = ? and age = ?", "jinzhu 2", 18).Find(&users)
+	Db.Where("name = ?", "jinzhu").Or("name = ? and age = ?", "jinzhu 2", 18).Find(&users)
 
 	// Struct
 	// SELECT * FROM `users` WHERE name = 'jinzhu' OR (`users`.`name` = 'jinzhu 2' AND `users`.`age` = 18)
-	db.Where("name = 'jinzhu'").Or(User{Name: "jinzhu 2", Age: 18}).Find(&users)
+	Db.Where("name = 'jinzhu'").Or(User{Name: "jinzhu 2", Age: 18}).Find(&users)
 
 	// Map
 	// SELECT * FROM `users` WHERE name = 'jinzhu' OR (`age` = 18 AND `name` = 'jinzhu 2')
-	db.Where("name = 'jinzhu'").Or(map[string]interface{}{"name": "jinzhu 2", "age": 18}).Find(&users)
+	Db.Where("name = 'jinzhu'").Or(map[string]interface{}{"name": "jinzhu 2", "age": 18}).Find(&users)
 }
 
 // 查询指定的字段
 func SelectFields() {
 	var users []User
-	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
-
 	// SELECT `name`,`age` FROM `users`
-	db.Select("name", "age").Find(&users)
+	Db.Select("name", "age").Find(&users)
 }
 
 // 指定数据排序
 func SelectOrder() {
 	var users []User
-	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
-	db.Order("age desc, name").Find(&users)
+	Db.Order("age desc, name").Find(&users)
 	// SELECT * FROM users ORDER BY age desc, name;
 
 	// Multiple orders
 	// SELECT * FROM users ORDER BY age desc, name;
-	db.Order("age desc").Order("name").Find(&users)
+	Db.Order("age desc").Order("name").Find(&users)
 
 }
 
@@ -273,18 +267,17 @@ func SelectLimit() {
 	var users []User
 	var users1 []User
 	var users2 []User
-	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
-	db.Limit(3).Find(&users)
+	Db.Limit(3).Find(&users)
 	// SELECT * FROM users LIMIT 3;
 
 	// Cancel limit condition with -1
-	db.Limit(10).Find(&users1).Limit(-1).Find(&users2)
+	Db.Limit(10).Find(&users1).Limit(-1).Find(&users2)
 	// SELECT * FROM users LIMIT 10; (users1)
 	// SELECT * FROM users; (users2)
 
 	// SELECT * FROM `users` LIMIT 10 OFFSET 5
 	// limit表示获取多少条数据  OFFSET表示跳过多少条数据
-	db.Offset(1).Limit(10).Find(&users)
+	Db.Offset(1).Limit(10).Find(&users)
 
 }
 
@@ -295,16 +288,13 @@ type result struct {
 
 func SelectGroup() {
 	var result result
-	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	Db.Model(&User{}).Select("name, sum(age) as total").Where("name LIKE ?", "group%").Group("name").Order("name desc").Find(&result)
 
-	db.Model(&User{}).Select("name, sum(age) as total").Where("name LIKE ?", "group%").Group("name").Order("name desc").Find(&result)
-
-	db.Model(&User{}).Select("name, sum(age) as total").Group("name").Having("name = ?", "group").Find(&result)
+	Db.Model(&User{}).Select("name, sum(age) as total").Group("name").Having("name = ?", "group").Find(&result)
 }
 
 func SelectDistinct() {
-	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
 	var result []map[string]interface{}
-	db.Model(&User{}).Distinct("name", "age").Find(&result)
+	Db.Model(&User{}).Distinct("name", "age").Find(&result)
 	fmt.Println(result)
 }

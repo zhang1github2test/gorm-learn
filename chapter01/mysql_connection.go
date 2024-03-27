@@ -7,6 +7,10 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+var (
+	Db, _ = GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+)
+
 /**
   *  演示通过gorm来链接mysql库
      前提条件：mysql数据库已经安装好了

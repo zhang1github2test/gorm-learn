@@ -1,7 +1,6 @@
-package test
+package chapter01
 
 import (
-	"go-orm-learn/chapter01"
 	"testing"
 )
 
@@ -13,7 +12,7 @@ func TestDeleteSingle(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			chapter01.DeleteSingle()
+			DeleteSingle()
 		})
 	}
 }
@@ -26,7 +25,7 @@ func TestDeleteById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			chapter01.DeleteById()
+			DeleteById()
 		})
 	}
 }
@@ -39,7 +38,7 @@ func TestDeleteByBatch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			chapter01.DeleteBatch()
+			DeleteBatch()
 		})
 	}
 }
