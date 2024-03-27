@@ -628,9 +628,9 @@ gorm的Updates方法支持更新struct和map[string]interface{}参数，当参�
 	})
 ```
 
-#### 5、删除数据
+### 5、删除数据
 
-##### 删除一条记录
+#### 删除一条记录
 
 删除一条记录的时候，需要指定对应的主键，不然会发生批量删除。
 
@@ -672,7 +672,7 @@ func TestDeleteSingle(t *testing.T) {
 
 
 
-##### 通过主键删除记录
+#### 通过主键删除记录
 
 GORM 允许通过主键(可以是复合主键)和内联条件来删除对象
 
@@ -712,7 +712,7 @@ func TestDeleteById(t *testing.T) {
 
 运行测试代码后，可以发现数据库中对应的数据已经被成功删除
 
-##### 带条件删除
+#### 带条件删除
 
 如果指定的值不包括主属性，那么 GORM 会执行批量删除，它将删除所有匹配的记录。
 
@@ -744,3 +744,47 @@ func TestDeleteByBatch(t *testing.T) {
 ```
 
 运行测试代码后，发现所有的姓名为jinzhu记录都已经被删除成功删除了
+
+### 6、使用原生sql操作数据
+
+尽管gorm框架已经提供很多强大的功能，但是在一些特殊的场景下，我们希望直接使用sql语句来跟数据库进行交互，此时我们可以按照下面的步骤进行：
+
+```go
+// 通过原生sql操作数据
+func SelectBySql() {
+	var user User
+	db, _ := GetMysqlDb("root", "123456", "192.168.188.155", 3306, "szkfpt")
+	db.Raw("select * from users;").Scan(&user)
+	fmt.Println(user)
+}
+```
+
+测试代码：
+
+```go
+
+func Test_selectBySql(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "selectBySql",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			chapter01.SelectBySql()
+		})
+	}
+}
+```
+
+测试输出的结果为：
+
+```go
+[11.968ms] [rows:1] select * from users;
+{1 Jinzhu <nil> 18 2024-03-27 16:38:01.052 +0800 CST { false} {0001-01-01 00:00:00 +0000 UTC false} 2024-03-27 16:38:01.104 +0800 CST 2024-03-27 16:38:01.104 +0800 CST}
+--- PASS: Test_selectBySql (0.02s)
+    --- PASS: Test_selectBySql/selectBySql (0.02s)
+```
+
