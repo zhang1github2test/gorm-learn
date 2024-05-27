@@ -1,0 +1,54 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.etcd.io/etcd/client/v3/concurrency"
+	"log"
+	"time"
+)
+
+func main()  {
+	// 初始化etcd客户端
+	cli, err := clientv3.New(clientv3.Config{
+		Endpoints:   []string{"localhost:2379"}, // 替换为你的etcd集群地址
+		DialTimeout: 5 * time.Second,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer cli.Close()
+
+	// 创建一个上下文
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// 创建一个新的session
+	session, err := concurrency.NewSession(cli)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer session.Close()
+
+	// 使用session创建锁
+	mutualTxn := concurrency.NewMutex(session, "lockKey")
+
+	// 尝试获取锁
+	err = mutualTxn.Lock(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Lock acquired")
+
+	// 模拟一些工作
+	time.Sleep(2 * time.Second)
+
+	// 释放锁
+	err = mutualTxn.Unlock(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Lock released")
+	
+}

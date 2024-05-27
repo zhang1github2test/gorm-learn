@@ -1,0 +1,76 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
+	clientv3 "go.etcd.io/etcd/client/v3"
+	"log"
+	"time"
+)
+
+type (
+	PutResponse clientv3.PutResponse
+)
+
+func main() {
+	cli, err := clientv3.New(clientv3.Config{
+		Endpoints:   []string{"192.168.188.101:2379"},
+		DialTimeout: 5 * time.Second,
+	})
+	if err != nil {
+		// handle error!
+	}
+	defer cli.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	// 往etcd里面写入值
+	resp, err := cli.Put(ctx, "sample_key", "sample_value")
+
+	if err != nil {
+		switch err {
+		case context.Canceled:
+			log.Fatalf("ctx is canceled by another routine: %v", err)
+		case context.DeadlineExceeded:
+			log.Fatalf("ctx is attached with a deadline is exceeded: %v", err)
+		case rpctypes.ErrEmptyKey:
+			log.Fatalf("client-side error: %v", err)
+		default:
+			log.Fatalf("bad cluster endpoints, which are not etcd servers: %v", err)
+		}
+		// handle error!
+	}
+	jsonData, _ := json.Marshal(resp)
+	fmt.Println(string(jsonData))
+
+	// 从etcd中读取值
+	resp2, err := cli.Get(ctx, "sample", clientv3.WithPrefix())
+	if err != nil {
+		log.Fatalf("从etcd读取数据失败: %v")
+	}
+	for _, ev := range resp2.Kvs {
+		fmt.Printf("%s -> %s\n", ev.Key, ev.Value)
+	}
+
+	watchChan := cli.Watch(context.Background(), "sample", clientv3.WithPrefix())
+	for x := range watchChan {
+		for _, event := range x.Events {
+			switch event.Type {
+			case clientv3.EventTypePut:
+				fmt.Printf("获取可以改变方式,key:%s, value: %s\n", event.Kv.Key, event.Kv.Value)
+			case clientv3.EventTypeDelete:
+				fmt.Printf("删除了key:%s\n", event.Kv.Key)
+			}
+
+		}
+	}
+	//select {
+	//case x := <-watchChan:
+	//	for _, event := range x.Events {
+	//		fmt.Printf("获取到事件,key:%s, value: %s", event.Kv.Key, event.Kv.Value)
+	//	}
+	//
+	//}
+}

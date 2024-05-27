@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestContextDemo(t *testing.T) {
+func TestTransactionDemo(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
@@ -14,7 +14,17 @@ func TestContextDemo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ContextDemo()
+			TransactionDemo()
 		})
 	}
+
+	TransactionDemo2()
+}
+
+func TestTransactionDemo2(t *testing.T) {
+	TransactionDemo2()
+}
+
+func TestTransactionDemo3(t *testing.T) {
+	TransactionDemo3()
 }
