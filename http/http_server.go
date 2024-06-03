@@ -17,6 +17,9 @@ func main() {
 	serverMux.HandleFunc(STATIC_PRE, staticHandler)
 	// 注册动态接口部分的路由
 	serverMux.HandleFunc("/hello", helloHandle)
+	serverMux.HandleFunc("/x-form", xFormHandler)
+	// 处理form-data的格式请求
+	//serverMux.HandleFunc("/form-data", formDataHandler)
 
 	err := http.ListenAndServe(":8080", serverMux)
 	if err != nil {
@@ -40,7 +43,15 @@ func helloHandle(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("hello world!"))
 }
 
-func processFormData(w http.ResponseWriter, r *http.Request) {
+// 接收 application/x-www-form-urlencoded
+func xFormHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(32 << 20)
+	name := r.FormValue("name")
+	sex := r.FormValue("sex")
+	w.Write([]byte("name:" + name + ",sex:" + sex))
+}
+
+func formDataHandler() {
 
 }
 
